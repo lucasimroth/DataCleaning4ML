@@ -29,8 +29,19 @@ def construtor_headers(row):
 
     return " ".join(parts)
 
+##função de canonização para converter os dados no padrão unico
+def build_canonical_request(row):
+    return (
+        f"method:{row['Method']} | "
+        f"url:{row['path']} | "
+        f"args:{row['args']} | "
+        f"form:{row['form']} | "
+        f"headers:{row['headers_clean']} | "
+        f"body:{row['body']} | "
+        f"json:{row['json']}"
+    )
 
-file_path = "datasets/csic_database.csv"
+file_path = "datasets/raw/csic_database.csv"
 
 df = pd.read_csv(file_path)
 
@@ -67,7 +78,18 @@ df['body'] = df['content'].fillna('')
 df.loc[df['Method'] == 'GET', 'body'] = ''
 
 
-print(df[['Method','path', 'args', 'headers_clean','body']].head())
+##print(df[['Method','path', 'args', 'headers_clean','body']].head())
 
+##colocando os campos necesarios para padronização
+df['form'] = ''
 
+df['json'] = ''
 
+df['canonical_request'] = df.apply(build_canonical_request, axis=1)
+
+print(df['canonical_request'].head(10).to_string(index=False))
+
+df[['canonical_request', 'classification']].to_csv(
+    "csic_canonical.csv",
+    index=False
+)
